@@ -2,12 +2,13 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style-components/modal.css') }}">
     <title>Sala de Segurança</title>
-    <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
     <div>
@@ -18,7 +19,7 @@
             <div style="display: flex; align-items: center; margin-left: auto;">
                 <img src="../static/img/icons/usuario.svg" alt="">
                 <p class="username">username</p>
-                <div class="button-logout">
+                <div class="button-logout" onclick="window.location.href='login.html'">
                     <p>Sair</p>
                     <button style="background: none; border: none; padding: none;">
                         <img style="width: 20px; height: 20px;" src="../static/img/icons/logout-user.svg" alt="">
@@ -34,7 +35,7 @@
                     <p class="title">Gerenciamento de Usuários</p>
                     <p class="subtitle">Administre eficientemente o acesso dos usuários ao versionamento.</p>
                 </div>
-                <button class="button-monitoramento">
+                <button class="button-monitoramento" onclick="window.location.href='dashboard'">
                     <img src="../static/img/icons/dashboards.svg" alt="">
                     <p>Monitorar em Tempo Real</p>
                 </button>
@@ -61,7 +62,7 @@
                     Excluir Usuário
                 </button>
 
-                <button class="button-primary">
+                <button class="button-primary" id="openModal">
                     <img src="../static/img/icons/profile-add.svg" alt="">
                     Cadastrar Usuário
                 </button>
@@ -138,5 +139,7 @@
 
         </div>
     </div>
+    {% include 'components/modal.html' %}
+    <script src="{{ url_for('static', filename='js/colaboradores.js') }}"></script>
 </body>
 </html>

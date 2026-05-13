@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sala de Segurança</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="stylesheet" href="../static/css/style-components/dashboard-style.css">
+</head>
+<body>
+
+  <nav class="topbar">
+    <button class="back-btn" onclick="window.location.href='gerencia-users'">
+        <i data-lucide="chevron-left"></i>
+        Voltar
+    </button>
+  </nav>
+
+  <main class="container">
+
+    <section class="cards-grid">
+
+      <div class="stat-card">
+        <div class="icon-box">
+          <i data-lucide="log-in"></i>
+        </div>
+        <div>
+          <h3 id="entradas-count">12</h3>
+          <span>Entradas Hoje</span>
+          <p id="entradas-ultima">Última: Joao às 00:00</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-box">
+          <i data-lucide="log-out"></i>
+        </div>
+        <div>
+          <h3 id="saidas-count">8</h3>
+          <span>Saídas Hoje</span>
+          <p id="saidas-ultima">Última: Maria às 00:00</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-box">
+          <i data-lucide="user-round-x"></i>
+        </div>
+        <div>
+          <h3 id="negadas-count">3</h3>
+          <span>Tentativas Negadas</span>
+          <p>Hoje</p>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="icon-box">
+          <i data-lucide="shield-alert"></i>
+        </div>
+        <div>
+          <h3 id="invasoes-count">2</h3>
+          <span>Tentativas de Invasão</span>
+          <p>Hoje</p>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="tables-grid">
+
+      <div class="table-card">
+        <div class="table-header red">
+          <i data-lucide="shield-alert"></i>
+          <h4>Tentativas de Invasão</h4>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Evento</th>
+              <th>Horário</th>
+              <th>RFID</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-invasoes">
+            <tr><td>RFID desconhecido</td><td>0000</td><td>0000</td></tr>
+            <tr><td>RFID desconhecido</td><td>0000</td><td>0000</td></tr>
+            <tr><td>RFID desconhecido</td><td>0000</td><td>0000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header purple">
+          <i data-lucide="users"></i>
+          <h4>Atualmente na Sala</h4>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Horário</th>
+              <th>RFID</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-sala">
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header green">
+          <i data-lucide="log-in"></i>
+          <h4>Últimas Entradas Autorizadas</h4>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Horário</th>
+              <th>RFID</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-entradas">
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header gray">
+          <i data-lucide="log-out"></i>
+          <h4>Últimas Saídas</h4>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Horário</th>
+              <th>RFID</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-saidas">
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+            <tr><td>Fulano de Tal</td><td>0000</td><td>0000</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+  </main>
+  <script>lucide.createIcons();</script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

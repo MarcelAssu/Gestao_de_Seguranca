@@ -1,0 +1,70 @@
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title-container">
+                    <img src="{{ url_for('static', filename='img/icons/create-user.svg') }}" alt="">
+                <div>
+                    <h2>Cadastrar Usuário</h2>
+                    <p>Cadastre um novo usuário com os dados abaixo.</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="userForm">
+            <div class="input-group">
+                <label>Nome<span>*</span></label>
+                <input type="text" id="nome" placeholder="Nome" required>
+            </div>
+            <div class="input-group">
+                <label>RFID<span>*</span></label>
+                <input type="text" id="rfid" placeholder="00000000" required>
+            </div>
+            <div class="input-group">
+                <label>Cargo<span>*</span></label>
+                <input type="text" id="cargo" placeholder="Cargo" required>
+            </div>
+            <div class="radio-section">
+                <div class="radio-row">
+                    <label>Acesso Permitido<span>*</span></label>
+                    <div class="radio-options">
+                        <label class="radio-option">
+                            <span>Sim</span>
+                            <input type="radio" name="acesso" value="Sim" required>
+                        </label>
+                        <label class="radio-option">
+                            <span>Não</span>
+                            <input type="radio" name="acesso" value="Não">
+                        </label>
+                    </div>
+                </div>
+                <div class="radio-row">
+                    <label>Status<span>*</span></label>
+                    <div class="radio-options">
+                        <label class="radio-option">
+                            <span>Ativo</span>
+                            <input type="radio" name="status" value="Ativo" required>
+                        </label>
+
+                        <label class="radio-option">
+                            <span>Inativo</span>
+                            <input type="radio" name="status" value="Inativo">
+                        </label>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="button" class="cancel-button" id="closeModal">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="register-button">
+                    Cadastrar
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>

@@ -8,17 +8,21 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <title>Sala de Segurança</title>
     <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="general-container">
         <div class="login-container">
-            <img class="logo" src="../static/img/logo-seguranca.svg" alt="Logo">
+            <img class="logo" src="../static/img/logo-seguranca.svg" src="{{ url_for('static', filename='img/logo-seguranca.svg') }}" alt="Logo">
             <p class="text-login">Faça login para entrar na sua conta:</p>
-            <input class="input-field" type="text" placeholder="Nome">
-            <input class="input-field" type="password" placeholder="Senha">
-            <button class="enter-button" onclick="">Entrar</button>
+            <input class="input-field" type="text" placeholder="Nome" id="usuario">
+            <input class="input-field" type="password" placeholder="Senha" id="senha">
+            <button class="enter-button" type="button" id="btnLogin">Entrar</button>
+            <p id="erro-login"></p>
         </div>
     </div>
 </body>
 <script src="../static/js/login.js"></script>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </html>
