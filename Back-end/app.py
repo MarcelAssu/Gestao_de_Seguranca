@@ -6,9 +6,9 @@ from pubnub.pnconfiguration import PNConfiguration
 from pubnub.pubnub import PubNub
 
 app = Flask(__name__,
-    template_folder=os.path.join('..', 'Front-end', 'templates'),
-    static_folder=os.path.join('..', 'Front-end', 'static')
-    )
+    template_folder=os.path.join( 'Front-end', 'templates'),
+    static_folder=os.path.join('Front-end', 'static')
+)
 
 # ---------------- CONFIGURAÇÃO PUBNUB ----------------
 pn_config = PNConfiguration()
@@ -20,7 +20,6 @@ pubnub = PubNub(pn_config)
 def init_db():
     conn = sqlite3.connect('seguranca.db')
     cursor = conn.cursor()
-    # Tabela de colaboradores conforme requisitos [cite: 53-59]
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS usuarios (
             tag INTEGER PRIMARY KEY,
@@ -31,7 +30,6 @@ def init_db():
             status TEXT DEFAULT 'ativo'
         )
     ''')
-    # Tabela de logs com coluna de horas para o Pandas [cite: 83, 93]
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,16 +59,45 @@ def salvar_usuario():
     dados = request.json
     conn = sqlite3.connect('seguranca.db')
     cursor = conn.cursor()
+   
+    # Atualizado para incluir e salvar o 'status'
     cursor.execute('''
-        INSERT INTO usuarios (tag, nome, matricula, cargo, autorizado)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO usuarios (tag, nome, matricula, cargo, autorizado, status)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(tag) DO UPDATE SET
-            nome=excluded.nome, autorizado=excluded.autorizado,
-            matricula=excluded.matricula, cargo=excluded.cargo
-    ''', (dados.get('tag'), dados.get('nome'), dados.get('matricula'), dados.get('cargo'), int(dados.get('autorizado', 0))))
+            nome=excluded.nome,
+            autorizado=excluded.autorizado,
+            matricula=excluded.matricula,
+            cargo=excluded.cargo,
+            status=excluded.status
+    ''', (
+        dados.get('tag'),
+        dados.get('nome'),
+        dados.get('matricula'),
+        dados.get('cargo'),
+        int(dados.get('autorizado', 0)),
+        dados.get('status', 'ativo')
+    ))
     conn.commit()
     conn.close()
+
+    # Avisa a Raspberry Pi para atualizar a lista local via PubNub
+    pubnub.publish().channel("controle_dispositivos").message({"acao": "atualizar_usuarios"}).sync()
+
     return jsonify({"status": "Sucesso"}), 201
+
+@app.route('/usuarios/<int:tag>', methods=['DELETE'])
+def excluir_usuario(tag):
+    conn = sqlite3.connect('seguranca.db')
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM usuarios WHERE tag = ?", (tag,))
+    conn.commit()
+    conn.close()
+   
+    # Sincroniza a exclusão com a Raspberry Pi
+    pubnub.publish().channel("controle_dispositivos").message({"acao": "atualizar_usuarios"}).sync()
+   
+    return jsonify({"status": "Excluído com sucesso"}), 200
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -79,6 +106,7 @@ def login():
         return jsonify({"autenticado": True}), 200
     return jsonify({"autenticado": False}), 401
 
+# ---------------- ROTAS DE NAVEGAÇÃO ----------------
 
 @app.route('/')
 def tela_login():
@@ -96,47 +124,67 @@ def dashboard():
 def dashboard_dados():
     conn = sqlite3.connect('seguranca.db')
     cursor = conn.cursor()
-    hoje = datetime.now().strftime('%Y-%m-%d')
+   
+    # Formato de data sincronizado com a Raspberry: DD/MM/YYYY
+    hoje = datetime.now().strftime('%d/%m/%Y')
 
-    # Entradas hoje
-    cursor.execute("SELECT COUNT(*), nome, horario FROM logs WHERE atividade='entrada' AND horario LIKE ? ORDER BY id DESC", (f'{hoje}%',))
-    entradas = cursor.fetchone()
+    # Contagem de Entradas e última entrada
+    cursor.execute("SELECT COUNT(*) FROM logs WHERE atividade='entrada' AND horario LIKE ?", (f'{hoje}%',))
+    count_entradas = cursor.fetchone()[0]
+   
+    cursor.execute("SELECT nome, horario FROM logs WHERE atividade='entrada' AND horario LIKE ? ORDER BY id DESC LIMIT 1", (f'{hoje}%',))
+    ultima_ent = cursor.fetchone()
+    txt_ent = f"{ultima_ent[0]} às {ultima_ent[1].split(' ')[1]}" if ultima_ent else "--"
 
-    # Saídas hoje
-    cursor.execute("SELECT COUNT(*), nome, horario FROM logs WHERE atividade='saida' AND horario LIKE ? ORDER BY id DESC", (f'{hoje}%',))
-    saidas = cursor.fetchone()
+    # Contagem de Saídas e última saída
+    cursor.execute("SELECT COUNT(*) FROM logs WHERE atividade='saida' AND horario LIKE ?", (f'{hoje}%',))
+    count_saidas = cursor.fetchone()[0]
+   
+    cursor.execute("SELECT nome, horario FROM logs WHERE atividade='saida' AND horario LIKE ? ORDER BY id DESC LIMIT 1", (f'{hoje}%',))
+    ultima_sai = cursor.fetchone()
+    txt_sai = f"{ultima_sai[0]} às {ultima_sai[1].split(' ')[1]}" if ultima_sai else "--"
 
-    # Tentativas negadas
+    # Alertas de Segurança
     cursor.execute("SELECT COUNT(*) FROM logs WHERE atividade='nao_autorizado' AND horario LIKE ?", (f'{hoje}%',))
     negadas = cursor.fetchone()[0]
 
-    # Tentativas de invasão
     cursor.execute("SELECT COUNT(*) FROM logs WHERE atividade='invasao' AND horario LIKE ?", (f'{hoje}%',))
     invasoes = cursor.fetchone()[0]
 
-    # Atualmente na sala
-    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='entrada' AND tag NOT IN (SELECT tag FROM logs WHERE atividade='saida') ORDER BY id DESC")
-    na_sala = [{"nome": r[0], "horario": r[1], "tag": r[2]} for r in cursor.fetchall()]
-
-    # Últimas entradas autorizadas
-    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='entrada' ORDER BY id DESC LIMIT 5")
+    # Preenchimento das tabelas do Dashboard
+    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='entrada' AND horario LIKE ? ORDER BY id DESC LIMIT 5", (f'{hoje}%',))
     ultimas_entradas = [{"nome": r[0], "horario": r[1], "tag": r[2]} for r in cursor.fetchall()]
 
-    # Últimas saídas
-    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='saida' ORDER BY id DESC LIMIT 5")
+    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='saida' AND horario LIKE ? ORDER BY id DESC LIMIT 5", (f'{hoje}%',))
     ultimas_saidas = [{"nome": r[0], "horario": r[1], "tag": r[2]} for r in cursor.fetchall()]
 
-    # Tentativas de invasão detalhadas
-    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='invasao' ORDER BY id DESC LIMIT 5")
+    cursor.execute("SELECT nome, horario, tag FROM logs WHERE atividade='invasao' AND horario LIKE ? ORDER BY id DESC LIMIT 5", (f'{hoje}%',))
     lista_invasoes = [{"nome": r[0], "horario": r[1], "tag": r[2]} for r in cursor.fetchall()]
+
+    # Lógica "Atualmente na Sala": Pega a última atividade de cada tag hoje
+    cursor.execute("""
+        SELECT nome, horario, tag, atividade
+        FROM logs
+        WHERE id IN (
+            SELECT MAX(id)
+            FROM logs
+            WHERE horario LIKE ?
+            GROUP BY tag
+        )
+    """, (f'{hoje}%',))
+   
+    na_sala = []
+    for row in cursor.fetchall():
+        if row[3] == 'entrada':
+            na_sala.append({"nome": row[0], "horario": row[1], "tag": row[2]})
 
     conn.close()
 
     return jsonify({
-        "entradas_count": entradas[0],
-        "entradas_ultima": f"{entradas[1]} às {entradas[2]}" if entradas[1] else "--",
-        "saidas_count": saidas[0],
-        "saidas_ultima": f"{saidas[1]} às {saidas[2]}" if saidas[1] else "--",
+        "entradas_count": count_entradas,
+        "entradas_ultima": txt_ent,
+        "saidas_count": count_saidas,
+        "saidas_ultima": txt_sai,
         "negadas": negadas,
         "invasoes": invasoes,
         "na_sala": na_sala,
@@ -144,6 +192,7 @@ def dashboard_dados():
         "ultimas_saidas": ultimas_saidas,
         "lista_invasoes": lista_invasoes
     })
+
 # ---------------- REGISTRO DE EVENTOS ----------------
 
 @app.route('/log', methods=['POST'])
@@ -158,6 +207,7 @@ def registrar_log():
     conn.commit()
     conn.close()
    
+    # Publica no PubNub para o Dashboard atualizar em tempo real
     pubnub.publish().channel("seguranca_sala").message({
         "nome": dados.get('nome'),
         "atividade": dados.get('atividade'),
